@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jasper Report Console</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #fafafa;
+        }
+
+        .section h2 {
+            color: #006699;
+            margin-top: 0;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input,
+        select {
+            width: 200px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+
+        button {
+            background-color: #006699;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #004577;
+        }
+
+        .api-endpoint {
+            background-color: #e8f4fd;
+            padding: 10px;
+            border-left: 4px solid #006699;
+            margin: 10px 0;
+            font-family: monospace;
+        }
+
+        .response {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 4px;
+            min-height: 30px;
+        }
+
+        .success {
+            color: green;
+        }
+
+        .error {
+            color: red;
+        }
+
+        .pdf-viewer {
+            width: 100%;
+            height: 600px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .viewer-controls {
+            margin: 10px 0;
+            text-align: center;
+        }
+
+        .viewer-controls button {
+            margin: 0 5px;
+        }
+
+        .embed-section {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e9f7ef;
+            border: 1px solid #27ae60;
+            border-radius: 5px;
+        }
+
+        .embed-section h3 {
+            color: #27ae60;
+            margin-top: 0;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #pdfViewer {
+            width: 100%;
+            height: 600px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .loading-indicator {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #006699;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .pdf-info {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .info-section {
+            background-color: #e3f2fd;
+            border-color: #2196f3;
+        }
+
+        .info-section h2 {
+            color: #1976d2;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🗂️ Jasper Report Console</h1>
+
+        <div class="section info-section">
+            <h2>ℹ️ How to Use PDF Embedding</h2>
+            <p><strong>📋 PDF Preview Feature:</strong> When you select "PDF" format and generate a report, it will be
+                displayed directly in this page instead of downloading.</p>
+            <ul>
+                <li><strong>View:</strong> PDF reports are embedded below the generation section</li>
+                <li><strong>Download:</strong> Use the "📥 Download PDF" button in the viewer controls</li>
+                <li><strong>New Tab:</strong> Use the "🔗 Open in New Tab" button to open in a separate window</li>
+                <li><strong>Close:</strong> Use the "✖ Close Viewer" button to hide the PDF viewer</li>
+            </ul>
+            <p><em>Note: Excel and HTML formats will still download directly to your device.</em></p>
+        </div>
+
+        <div class="section">
+            <h2>📊 Generate All Employees Report</h2>
+            <div class="form-group">
+                <label for="format1">Format:</label>
+                <select id="format1">
+                    <option value="pdf">PDF</option>
+                    <option value="xlsx">Excel</option>
+                    <option value="html">HTML</option>
+                </select>
+                <button onclick="generateAllEmployeesReport()">Generate Report</button>
+            </div>
+            <div class="api-endpoint">GET /api/reports/employee?format={format}</div>
+            <div id="response1" class="response"></div>
+
+            <!-- PDF Viewer Section -->
+            <div class="embed-section hidden" id="pdfViewerSection">
+                <h3>📋 PDF Preview</h3>
+                <div class="pdf-info" id="pdfInfo"></div>
+                <div class="viewer-controls">
+                    <button onclick="closePdfViewer()">✖ Close Viewer</button>
+                    <button onclick="downloadCurrentPdf()">📥 Download PDF</button>
+                    <button onclick="openInNewTab()">🔗 Open in New Tab</button>
+                </div>
+                <div class="loading-indicator hidden" id="pdfLoading">
+                    <div class="loading-spinner"></div>
+                    <p>Loading PDF...</p>
+                </div>
+                <iframe id="pdfViewer" frameborder="0"></iframe>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🏢 Generate Report by Department</h2>
+            <div class="form-group">
+                <label for="department">Department:</label>
+                <select id="department">
+                    <option value="Engineering">Engineering</option>
+                    <option value="Marketing">Marketing</option>
+                    <option value="Sales">Sales</option>
+                    <option value="HR">HR</option>
+                    <option value="Finance">Finance</option>
+                    <option value="Operations">Operations</option>
+                </select>
+                <label for="format2">Format:</label>
+                <select id="format2">
+                    <option value="pdf">PDF</option>
+                    <option value="xlsx">Excel</option>
+                    <option value="html">HTML</option>
+                </select>
+                <button onclick="generateDepartmentReport()">Generate Report</button>
+            </div>
+            <div class="api-endpoint">GET /api/reports/employee/department/{department}?format={format}</div>
+            <div id="response2" class="response"></div>
+        </div>
+
+        <div class="section">
+            <h2>💰 Generate Report by Salary Range</h2>
+            <div class="form-group">
+                <label for="minSalary">Min Salary:</label>
+                <input type="number" id="minSalary" value="50000" min="0">
+                <label for="maxSalary">Max Salary:</label>
+                <input type="number" id="maxSalary" value="80000" min="0">
+                <label for="format3">Format:</label>
+                <select id="format3">
+                    <option value="pdf">PDF</option>
+                    <option value="xlsx">Excel</option>
+                    <option value="html">HTML</option>
+                </select>
+                <button onclick="generateSalaryReport()">Generate Report</button>
+            </div>
+            <div class="api-endpoint">GET /api/reports/employee/salary?minSalary={min}&maxSalary={max}&format={format}
+            </div>
+            <div id="response3" class="response"></div>
+        </div>
+
+        <div class="section">
+            <h2>📋 View Employee Data (JSON)</h2>
+            <button onclick="viewEmployeeData()">View Data</button>
+            <div class="api-endpoint">GET /api/reports/employee/data</div>
+            <div id="response4" class="response"></div>
+        </div>
+
+        <div class="section">
+            <h2>🔧 Service Health Check</h2>
+            <button onclick="healthCheck()">Check Health</button>
+            <div class="api-endpoint">GET /api/reports/health</div>
+            <div id="response5" class="response"></div>
+        </div>
+
+        <div class="section">
+            <h2>📄 PDF Report Viewer</h2>
+            <div class="form-group">
+                <label for="pdfUrl">PDF URL:</label>
+                <input type="text" id="pdfUrl" placeholder="Enter PDF URL">
+                <button onclick="loadPdf()">Load PDF</button>
+            </div>
+            <div class="pdf-viewer" id="pdfViewer">
+                <iframe id="pdfIframe" style="width:100%; height:100%;" frameborder="0"></iframe>
+            </div>
+            <div class="viewer-controls" id="viewerControls" style="display:none;">
+                <button onclick="prevPage()">&#10094; Prev</button>
+                <button onclick="nextPage()">Next &#10095;</button>
+            </div>
+        </div>
+
+        <div class="section embed-section" id="embedSection" style="display:none;">
+            <h3>🔗 Embed Report</h3>
+            <p>Use the following HTML code to embed the report:</p>
+            <textarea id="embedCode" rows="4" style="width:100%; font-family:monospace;"></textarea>
+            <button onclick="copyEmbedCode()">Copy Embed Code</button>
+        </div>
+    </div>
+
+    <script>
+        const baseUrl = 'http://localhost:8081/api/reports';
+
+        function generateAllEmployeesReport() {
+            const format = document.getElementById('format1').value;
+            const url = `${baseUrl}/employee?format=${format}`;
+
+            if (format === 'pdf') {
+                generateAndEmbedPdf(url, 'response1');
+            } else {
+                downloadReport(url, `employee_report.${format}`, 'response1');
+            }
+        }
+
+        function generateDepartmentReport() {
+            const department = document.getElementById('department').value;
+            const format = document.getElementById('format2').value;
+            const url = `${baseUrl}/employee/department/${department}?format=${format}`;
+
+            if (format === 'pdf') {
+                generateAndEmbedPdf(url, 'response2');
+            } else {
+                downloadReport(url, `employee_${department}_report.${format}`, 'response2');
+            }
+        }
+
+        function generateSalaryReport() {
+            const minSalary = document.getElementById('minSalary').value;
+            const maxSalary = document.getElementById('maxSalary').value;
+            const format = document.getElementById('format3').value;
+            const url = `${baseUrl}/employee/salary?minSalary=${minSalary}&maxSalary=${maxSalary}&format=${format}`;
+
+            if (format === 'pdf') {
+                generateAndEmbedPdf(url, 'response3');
+            } else {
+                downloadReport(url, `employee_salary_report.${format}`, 'response3');
+            }
+        }
+
+        let currentPdfUrl = null;
+        let currentFilename = null;
+
+        function generateAndEmbedPdf(url, responseId) {
+            updateResponse(responseId, 'Generating PDF report...', 'info');
+            closePdfViewer(); // Close any existing viewer
+
+            // Show loading indicator
+            const viewerSection = document.getElementById('pdfViewerSection');
+            const loadingIndicator = document.getElementById('pdfLoading');
+            const pdfViewer = document.getElementById('pdfViewer');
+
+            viewerSection.classList.remove('hidden');
+            loadingIndicator.classList.remove('hidden');
+            pdfViewer.style.display = 'none';
+
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.blob();
+                })
+                .then(blob => {
+                    currentPdfUrl = window.URL.createObjectURL(blob);
+                    currentFilename = `report_${Date.now()}.pdf`;
+
+                    // Update PDF info
+                    const pdfInfo = document.getElementById('pdfInfo');
+                    const fileSizeKB = Math.round(blob.size / 1024);
+                    pdfInfo.innerHTML = `📄 PDF Size: ${fileSizeKB} KB | Generated: ${new Date().toLocaleString()}`;
+
+                    // Hide loading and show PDF
+                    loadingIndicator.classList.add('hidden');
+                    pdfViewer.style.display = 'block';
+                    pdfViewer.src = currentPdfUrl;
+
+                    updateResponse(responseId, '✅ PDF report generated and embedded below', 'success');
+
+                    // Scroll to the PDF viewer
+                    viewerSection.scrollIntoView({ behavior: 'smooth' });
+                })
+                .catch(error => {
+                    // Hide loading on error
+                    loadingIndicator.classList.add('hidden');
+                    viewerSection.classList.add('hidden');
+                    updateResponse(responseId, `❌ Error: ${error.message}`, 'error');
+                });
+        }
+
+        function closePdfViewer() {
+            const viewerSection = document.getElementById('pdfViewerSection');
+            const pdfViewer = document.getElementById('pdfViewer');
+            const loadingIndicator = document.getElementById('pdfLoading');
+
+            viewerSection.classList.add('hidden');
+            loadingIndicator.classList.add('hidden');
+            pdfViewer.src = '';
+            pdfViewer.style.display = 'block'; // Reset for next use
+
+            if (currentPdfUrl) {
+                window.URL.revokeObjectURL(currentPdfUrl);
+                currentPdfUrl = null;
+            }
+        }
+
+        function downloadCurrentPdf() {
+            if (currentPdfUrl && currentFilename) {
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = currentPdfUrl;
+                a.download = currentFilename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            }
+        }
+
+        function openInNewTab() {
+            if (currentPdfUrl) {
+                window.open(currentPdfUrl, '_blank');
+            }
+        }
+
+        function downloadReport(url, filename, responseId) {
+            updateResponse(responseId, 'Generating report...', 'info');
+
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.blob();
+                })
+                .then(blob => {
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    updateResponse(responseId, `✅ Report generated and downloaded: ${filename}`, 'success');
+                })
+                .catch(error => {
+                    updateResponse(responseId, `❌ Error: ${error.message}`, 'error');
+                });
+        }
+
+        function viewEmployeeData() {
+            updateResponse('response4', 'Loading employee data...', 'info');
+
+            fetch(`${baseUrl}/employee/data`)
+                .then(response => response.json())
+                .then(data => {
+                    const formattedData = JSON.stringify(data, null, 2);
+                    updateResponse('response4', `✅ Employee Data (${data.length} records):\n${formattedData}`, 'success');
+                })
+                .catch(error => {
+                    updateResponse('response4', `❌ Error: ${error.message}`, 'error');
+                });
+        }
+
+        function healthCheck() {
+            updateResponse('response5', 'Checking service health...', 'info');
+
+            fetch(`${baseUrl}/health`)
+                .then(response => response.text())
+                .then(data => {
+                    updateResponse('response5', `✅ ${data}`, 'success');
+                })
+                .catch(error => {
+                    updateResponse('response5', `❌ Service unavailable: ${error.message}`, 'error');
+                });
+        }
+
+        function updateResponse(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = message;
+            element.className = `response ${type}`;
+        }
+
+        function loadPdf() {
+            const url = document.getElementById('pdfUrl').value;
+            const pdfViewer = document.getElementById('pdfViewer');
+            const pdfIframe = document.getElementById('pdfIframe');
+            const viewerControls = document.getElementById('viewerControls');
+
+            if (url) {
+                pdfViewer.style.display = 'block';
+                pdfIframe.src = url;
+                viewerControls.style.display = 'inline-block';
+                updateResponse('response1', '', ''); // Clear previous response
+            } else {
+                pdfViewer.style.display = 'none';
+                viewerControls.style.display = 'none';
+            }
+        }
+
+        let currentPage = 1;
+        let totalPages = 1;
+
+        function nextPage() {
+            if (currentPage < totalPages) {
+                currentPage++;
+                updatePdfPage();
+            }
+        }
+
+        function prevPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                updatePdfPage();
+            }
+        }
+
+        function updatePdfPage() {
+            const pdfIframe = document.getElementById('pdfIframe');
+            pdfIframe.contentWindow.PDFViewerApplication.page = currentPage;
+        }
+
+        function copyEmbedCode() {
+            const embedCode = document.getElementById('embedCode');
+            embedCode.select();
+            document.execCommand('copy');
+            alert('Embed code copied to clipboard!');
+        }
+
+        // Auto health check on page load
+        window.onload = function () {
+            healthCheck();
+        };
+    </script>
+</body>
+
+</html>
