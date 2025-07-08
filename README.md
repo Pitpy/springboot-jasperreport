@@ -37,7 +37,7 @@ The Jasper Reports Console is a demonstration project that showcases how to inte
 
 - **Backend Framework**: Spring Boot 3.2.5
 - **Java Version**: Java 21
-- **Reporting Engine**: JasperReports 6.20.6
+- **Reporting Engine**: JasperReports 6.21.3
 - **Build Tool**: Maven 3.x
 - **Server**: Embedded Tomcat (Port 8081)
 - **Frontend**: HTML5, CSS3, JavaScript
